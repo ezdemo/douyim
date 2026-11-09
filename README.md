@@ -2,8 +2,8 @@
 
 <img src="docs/douxianren-icon.png" alt="抖仙人图标" width="160">
 
-面向抖音 Android 客户端的 LSPosed Modern API 102 纯净播放模块。播放视频时只保留视频画面，
-暂停后恢复完整界面，并支持下载当前无水印视频或 MP3 音频和自定义内容跳过规则。
+面向抖音 Android 客户端的 LSPosed Modern API 102 纯净播放模块。默认在播放视频时只保留视频画面，
+也可按需保留指定界面组件；暂停后恢复完整界面，并支持下载当前无水印视频或 MP3 音频和自定义内容跳过规则。
 
 ## 主要功能
 
