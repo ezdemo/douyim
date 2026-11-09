@@ -45,6 +45,7 @@ public final class MainActivity extends Activity
     private Switch moduleEnabled;
     private Switch blockDoubleTap;
     private Switch immersiveEnabled;
+    private Switch noCrop;
     private Switch skipAds;
     private Switch skipImages;
     private Switch skipLives;
@@ -165,6 +166,13 @@ public final class MainActivity extends Activity
         immersiveEnabled = addSwitch(playbackCard, "沉浸式播放",
                 "播放时按组件设置隐藏界面，暂停时恢复；关闭后仍可使用过滤、双击拦截和下载",
                 FilterPreferences.KEY_IMMERSIVE_ENABLED);
+        addDivider(playbackCard);
+        noCrop = addSwitch(
+                playbackCard,
+                "视频不裁剪",
+                "按视频原始宽高比完整显示横屏和宽幅内容；多余区域保留背景",
+                FilterPreferences.KEY_NO_CROP
+        );
         addDivider(playbackCard);
         TextView componentTitle = text("按需屏蔽组件", 15, PRIMARY);
         componentTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -312,6 +320,7 @@ public final class MainActivity extends Activity
         preferences = service.getRemotePreferences(FilterPreferences.NAME);
         moduleEnabled.setChecked(FilterPreferences.readModuleEnabled(preferences));
         immersiveEnabled.setChecked(FilterPreferences.readImmersiveEnabled(preferences));
+        noCrop.setChecked(FilterPreferences.readNoCropEnabled(preferences));
         blockDoubleTap.setChecked(FilterPreferences.readBlockDoubleTap(preferences));
         FilterPreferences.Values values = FilterPreferences.read(preferences);
         skipAds.setChecked(values.skipAds);
@@ -510,6 +519,7 @@ public final class MainActivity extends Activity
         moduleEnabled.setEnabled(enabled);
         blockDoubleTap.setEnabled(enabled);
         immersiveEnabled.setEnabled(enabled);
+        noCrop.setEnabled(enabled);
         skipAds.setEnabled(enabled);
         skipImages.setEnabled(enabled);
         skipLives.setEnabled(enabled);
