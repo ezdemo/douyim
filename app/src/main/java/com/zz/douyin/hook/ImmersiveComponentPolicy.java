@@ -113,8 +113,9 @@ final class ImmersiveComponentPolicy {
             return RIGHT_ACTIONS;
         }
 
-        if (bottomNavigationArea && contentView && containsAny(text,
-                "首页", "朋友", "消息", "我", "商城", "推荐")) {
+        if (bottomNavigationArea && contentView
+                && (containsAny(text, "首页", "朋友", "消息", "商城", "推荐")
+                || "我".equals(text.trim()))) {
             return BOTTOM_NAVIGATION;
         }
 
