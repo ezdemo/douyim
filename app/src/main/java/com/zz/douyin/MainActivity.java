@@ -163,7 +163,7 @@ public final class MainActivity extends Activity
 
         LinearLayout playbackCard = card();
         immersiveEnabled = addSwitch(playbackCard, "沉浸式播放",
-                "播放时隐藏界面，暂停时恢复；关闭后仍可使用过滤、双击拦截和下载",
+                "播放时按组件设置隐藏界面，暂停时恢复；关闭后仍可使用过滤、双击拦截和下载",
                 FilterPreferences.KEY_IMMERSIVE_ENABLED);
         addDivider(playbackCard);
         TextView componentTitle = text("按需屏蔽组件", 15, PRIMARY);
