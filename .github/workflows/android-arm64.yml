@@ -10,6 +10,15 @@ on:
       - "*.gradle.kts"
       - "gradle.properties"
       - ".github/workflows/android-arm64.yml"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/android-arm64.yml"
   workflow_dispatch:
 
 permissions:
