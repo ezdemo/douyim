@@ -60,37 +60,46 @@ final class ImmersiveComponentPolicy {
         boolean contentView = clickable || textLike || imageLike;
 
         if (containsAny(names,
-                "seekbar", "progressbar", "timebar", "playcontrol",
-                "playercontrol", "playpause", "pausebutton", "playbutton",
-                "videocontrol", "controlpanel", "video_progress",
-                "progress_view", "video_seek")) {
+                "seekbar", "seek_bar", "progressbar", "progress_bar",
+                "timebar", "time_bar", "playcontrol", "play_control",
+                "playercontrol", "player_control", "playpause", "play_pause",
+                "pausebutton", "pause_button", "playbutton", "play_button",
+                "videocontrol", "video_control", "controlpanel", "control_panel",
+                "video_progress", "progress_view", "video_seek")) {
             return PLAYER_CONTROLS;
         }
 
         if (topArea && containsAny(names,
-                "topbar", "toolbar", "topnavigation", "navigationheader",
-                "searchbar", "searchbutton", "feedtab", "feednavigation")) {
+                "topbar", "top_bar", "toolbar", "topnavigation", "top_navigation",
+                "navigationheader", "navigation_header", "searchbar", "search_bar",
+                "searchbutton", "search_button", "feedtab", "feed_tab",
+                "feednavigation", "feed_navigation")) {
             return TOP_NAVIGATION;
         }
 
         if (rightArea && containsAny(names,
-                "feedright", "rightaction", "actionbar", "actionitem",
-                "digg", "likebutton", "commentbutton", "collect",
-                "favorite", "sharebutton", "forwardbutton")) {
+                "feedright", "feed_right", "rightaction", "right_action",
+                "actionbar", "action_bar", "actionitem", "action_item",
+                "digg", "likebutton", "like_button", "commentbutton", "comment_button",
+                "collect", "favorite", "sharebutton", "share_button",
+                "forwardbutton", "forward_button")) {
             return RIGHT_ACTIONS;
         }
 
         if (bottomNavigationArea && containsAny(names,
-                "bottomnavigation", "bottom_nav", "bottomtab", "tabbar",
-                "tablayout", "navigationbar", "bottommenu", "home_tab",
-                "profile_tab", "feedbottom")) {
+                "bottomnavigation", "bottom_navigation", "bottom_nav",
+                "bottomtab", "bottom_tab", "tabbar", "tab_bar",
+                "tablayout", "tab_layout", "navigationbar", "navigation_bar",
+                "bottommenu", "bottom_menu", "home_tab", "profile_tab",
+                "feedbottom", "feed_bottom")) {
             return BOTTOM_NAVIGATION;
         }
 
         if (bottomInfoArea && containsAny(names,
                 "author", "avatar", "nickname", "caption", "description",
-                "feedinfo", "bottominfo", "userprofile", "creator",
-                "musicname", "musicinfo")) {
+                "feedinfo", "feed_info", "bottominfo", "bottom_info",
+                "userprofile", "user_profile", "creator", "musicname",
+                "music_name", "musicinfo", "music_info")) {
             return BOTTOM_INFO;
         }
 
