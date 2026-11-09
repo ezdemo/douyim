@@ -50,6 +50,12 @@ public final class MainActivity extends Activity
     private Switch skipLives;
     private Switch skipVideos;
     private Switch showDanmaku;
+    private Switch hideTopNavigation;
+    private Switch hideRightActions;
+    private Switch hideBottomInfo;
+    private Switch hideBottomNavigation;
+    private Switch hidePlayerControls;
+    private Switch hideSystemBars;
     private Switch doubleTapComments;
     private final List<Button> qualityChips = new ArrayList<>();
     private EditText keywordInput;
@@ -157,13 +163,59 @@ public final class MainActivity extends Activity
 
         LinearLayout playbackCard = card();
         immersiveEnabled = addSwitch(playbackCard, "沉浸式播放",
-                "播放时隐藏界面，暂停时恢复；关闭后仍可使用过滤、双击拦截和下载",
+                "播放时按组件设置隐藏界面，暂停时恢复；关闭后仍可使用过滤、双击拦截和下载",
                 FilterPreferences.KEY_IMMERSIVE_ENABLED);
+        addDivider(playbackCard);
+        TextView componentTitle = text("按需屏蔽组件", 15, PRIMARY);
+        componentTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        componentTitle.setPadding(dp(16), dp(14), dp(16), dp(8));
+        playbackCard.addView(componentTitle, matchWrap());
+        hideTopNavigation = addSwitch(
+                playbackCard,
+                "隐藏顶部导航栏",
+                "关闭后保留顶部搜索、推荐等入口",
+                FilterPreferences.KEY_IMMERSIVE_HIDE_TOP_NAVIGATION
+        );
+        addDivider(playbackCard);
+        hideRightActions = addSwitch(
+                playbackCard,
+                "隐藏右侧操作栏",
+                "关闭后保留点赞、评论、收藏、分享等按钮",
+                FilterPreferences.KEY_IMMERSIVE_HIDE_RIGHT_ACTIONS
+        );
+        addDivider(playbackCard);
+        hideBottomInfo = addSwitch(
+                playbackCard,
+                "隐藏底部作品信息",
+                "关闭后保留作者、作品文案和音乐信息",
+                FilterPreferences.KEY_IMMERSIVE_HIDE_BOTTOM_INFO
+        );
+        addDivider(playbackCard);
+        hideBottomNavigation = addSwitch(
+                playbackCard,
+                "隐藏底部导航栏",
+                "关闭后保留首页、朋友、消息、我等底部入口",
+                FilterPreferences.KEY_IMMERSIVE_HIDE_BOTTOM_NAVIGATION
+        );
+        addDivider(playbackCard);
+        hidePlayerControls = addSwitch(
+                playbackCard,
+                "隐藏视频播放控件",
+                "关闭后保留进度条及原生播放控制",
+                FilterPreferences.KEY_IMMERSIVE_HIDE_PLAYER_CONTROLS
+        );
+        addDivider(playbackCard);
+        hideSystemBars = addSwitch(
+                playbackCard,
+                "隐藏系统状态栏和导航栏",
+                "关闭后保留 Android 系统状态栏及底部导航栏",
+                FilterPreferences.KEY_IMMERSIVE_HIDE_SYSTEM_BARS
+        );
         addDivider(playbackCard);
         showDanmaku = addSwitch(
                 playbackCard,
                 "播放弹幕",
-                "纯净播放时保留抖音原生弹幕，其他界面仍保持隐藏",
+                "开启后在沉浸播放时保留抖音原生弹幕",
                 FilterPreferences.KEY_SHOW_DANMAKU
         );
         addDivider(playbackCard);
@@ -267,6 +319,14 @@ public final class MainActivity extends Activity
         skipLives.setChecked(values.skipLives);
         skipVideos.setChecked(values.skipVideos);
         showDanmaku.setChecked(FilterPreferences.readShowDanmaku(preferences));
+        FilterPreferences.ImmersiveComponents components =
+                FilterPreferences.readImmersiveComponents(preferences);
+        hideTopNavigation.setChecked(components.hideTopNavigation);
+        hideRightActions.setChecked(components.hideRightActions);
+        hideBottomInfo.setChecked(components.hideBottomInfo);
+        hideBottomNavigation.setChecked(components.hideBottomNavigation);
+        hidePlayerControls.setChecked(components.hidePlayerControls);
+        hideSystemBars.setChecked(components.hideSystemBars);
         doubleTapComments.setChecked(
                 FilterPreferences.readDoubleTapComments(preferences)
         );
@@ -455,6 +515,12 @@ public final class MainActivity extends Activity
         skipLives.setEnabled(enabled);
         skipVideos.setEnabled(enabled);
         showDanmaku.setEnabled(enabled);
+        hideTopNavigation.setEnabled(enabled);
+        hideRightActions.setEnabled(enabled);
+        hideBottomInfo.setEnabled(enabled);
+        hideBottomNavigation.setEnabled(enabled);
+        hidePlayerControls.setEnabled(enabled);
+        hideSystemBars.setEnabled(enabled);
         doubleTapComments.setEnabled(enabled);
         for (Button chip : qualityChips) {
             chip.setEnabled(enabled);

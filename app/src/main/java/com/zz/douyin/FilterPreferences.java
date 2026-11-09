@@ -20,6 +20,18 @@ public final class FilterPreferences {
     public static final String KEY_SKIP_VIDEOS = "skip_videos";
     public static final String KEY_VIDEO_KEYWORDS = "video_keywords";
     public static final String KEY_SHOW_DANMAKU = "show_danmaku";
+    public static final String KEY_IMMERSIVE_HIDE_TOP_NAVIGATION =
+            "immersive_hide_top_navigation";
+    public static final String KEY_IMMERSIVE_HIDE_RIGHT_ACTIONS =
+            "immersive_hide_right_actions";
+    public static final String KEY_IMMERSIVE_HIDE_BOTTOM_INFO =
+            "immersive_hide_bottom_info";
+    public static final String KEY_IMMERSIVE_HIDE_BOTTOM_NAVIGATION =
+            "immersive_hide_bottom_navigation";
+    public static final String KEY_IMMERSIVE_HIDE_PLAYER_CONTROLS =
+            "immersive_hide_player_controls";
+    public static final String KEY_IMMERSIVE_HIDE_SYSTEM_BARS =
+            "immersive_hide_system_bars";
     public static final String KEY_DOUBLE_TAP_COMMENTS = "double_tap_comments";
     public static final String KEY_VIDEO_QUALITY = "video_quality";
 
@@ -72,6 +84,53 @@ public final class FilterPreferences {
                 preferences.getBoolean(KEY_SKIP_VIDEOS, DEFAULT_SKIP_VIDEOS),
                 preferences.getString(KEY_VIDEO_KEYWORDS, "")
         );
+    }
+
+    /**
+     * Component visibility options used while immersive playback is active.
+     * All hide flags default to true so existing installations keep the old
+     * full-screen behavior after upgrading.
+     */
+    public static ImmersiveComponents readImmersiveComponents(
+            SharedPreferences preferences
+    ) {
+        return new ImmersiveComponents(
+                readBoolean(preferences, KEY_IMMERSIVE_HIDE_TOP_NAVIGATION),
+                readBoolean(preferences, KEY_IMMERSIVE_HIDE_RIGHT_ACTIONS),
+                readBoolean(preferences, KEY_IMMERSIVE_HIDE_BOTTOM_INFO),
+                readBoolean(preferences, KEY_IMMERSIVE_HIDE_BOTTOM_NAVIGATION),
+                readBoolean(preferences, KEY_IMMERSIVE_HIDE_PLAYER_CONTROLS),
+                readBoolean(preferences, KEY_IMMERSIVE_HIDE_SYSTEM_BARS)
+        );
+    }
+
+    private static boolean readBoolean(SharedPreferences preferences, String key) {
+        return preferences == null || preferences.getBoolean(key, true);
+    }
+
+    public static final class ImmersiveComponents {
+        public final boolean hideTopNavigation;
+        public final boolean hideRightActions;
+        public final boolean hideBottomInfo;
+        public final boolean hideBottomNavigation;
+        public final boolean hidePlayerControls;
+        public final boolean hideSystemBars;
+
+        private ImmersiveComponents(
+                boolean hideTopNavigation,
+                boolean hideRightActions,
+                boolean hideBottomInfo,
+                boolean hideBottomNavigation,
+                boolean hidePlayerControls,
+                boolean hideSystemBars
+        ) {
+            this.hideTopNavigation = hideTopNavigation;
+            this.hideRightActions = hideRightActions;
+            this.hideBottomInfo = hideBottomInfo;
+            this.hideBottomNavigation = hideBottomNavigation;
+            this.hidePlayerControls = hidePlayerControls;
+            this.hideSystemBars = hideSystemBars;
+        }
     }
 
     public static boolean readShowDanmaku(SharedPreferences preferences) {

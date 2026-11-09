@@ -18,6 +18,16 @@ android {
         versionName = "1.7.5"
     }
 
+    // Generate an ABI-specific APK for modern ARM64 Android devices.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a")
+            isUniversalApk = false
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"

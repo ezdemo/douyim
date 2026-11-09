@@ -1,0 +1,104 @@
+name: Android ARM64 APK
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/android-arm64.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-arm64-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-arm64:
+    name: Build arm64-v8a release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK 37
+        run: sdkmanager "platforms;android-37"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run unit tests and build ARM64 release APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon --stacktrace \
+            :app:testDebugUnitTest \
+            :app:lintRelease \
+            :app:assembleRelease
+
+      - name: Verify and stage ARM64 APK
+        id: apk
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK_DIR="/tmp/douyin-immersive-gradle/app/outputs/apk/release"
+          mapfile -t APKS < <(find "$APK_DIR" -maxdepth 1 -type f -name "*.apk" | sort)
+
+          if [ "${#APKS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ABI APK, found ${#APKS[@]}."
+            printf '%s\n' "${APKS[@]}"
+            exit 1
+          fi
+
+          if [[ "$(basename "${APKS[0]}")" != *"arm64-v8a"* ]]; then
+            echo "Expected arm64-v8a APK, got: ${APKS[0]}"
+            exit 1
+          fi
+
+          mkdir -p dist
+          cp "${APKS[0]}" dist/douyim-arm64-v8a.apk
+          sha256sum dist/douyim-arm64-v8a.apk | tee dist/SHA256SUMS.txt
+
+          echo "apk_name=douyim-arm64-v8a.apk" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ARM64 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: douyim-arm64-v8a
+          path: |
+            dist/douyim-arm64-v8a.apk
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Add build summary
+        if: success()
+        run: |
+          {
+            echo "## ARM64 APK build succeeded"
+            echo
+            echo "- APK: `douyim-arm64-v8a.apk`"
+            echo "- ABI: `arm64-v8a`"
+            echo "- Commit: `${GITHUB_SHA}`"
+            echo "- SHA-256:"
+            echo
+            echo "```"
+            cat dist/SHA256SUMS.txt
+            echo "```"
+          } >> "$GITHUB_STEP_SUMMARY"
