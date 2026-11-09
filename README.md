@@ -273,3 +273,9 @@ app/src/main/java/com/zz/douyin/
 ```shell
 adb logcat -s DouyinImmersive
 ```
+
+
+## 第三方代码与许可证
+
+- 视频不裁剪实现基于 [dunxuan/io.github.dunxuan.douyinnocrop](https://github.com/dunxuan/io.github.dunxuan.douyinnocrop)，按 MIT License 集成并增加了抖仙人设置开关及运行时启停。
+- 对应许可证随 APK 放在 `app/src/main/assets/licenses/douyin-no-crop-MIT.txt`。
