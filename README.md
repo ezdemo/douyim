@@ -187,14 +187,19 @@ aeec9d3442d1999d42a1ed0ea99f4427c853b3a064fb39f4b748529d1dfc2d26
 - Android SDK 37
 - PowerShell 或其他可运行 Gradle Wrapper 的终端
 
-执行完整检查和发布构建：
+执行完整检查和 ARM64 发布构建：
 
 ```powershell
 .\gradlew.bat clean lintRelease test assembleRelease
 ```
 
-Gradle 中间产物会写入系统临时目录下的 `douyin-immersive-gradle/app`，最终构建产物位于该目录的
-`outputs/apk/release` 下。仓库中经过验证、可直接安装的版本保存在 [`dist`](dist) 目录。
+项目仅生成 `arm64-v8a` ABI APK，文件名为 `app-arm64-v8a-release.apk`。Gradle 中间产物会写入系统
+临时目录下的 `douyin-immersive-gradle/app`，最终构建产物位于该目录的 `outputs/apk/release` 下。
+
+也可以在 GitHub 仓库的 **Actions → Android ARM64 APK → Run workflow** 手动触发构建；
+合并到 `master` 后，相关源码变更也会自动触发构建。构建成功后，在对应运行记录的
+**Artifacts** 区域下载 `douyim-arm64-v8a`。仓库中经过验证、可直接安装的版本仍保存在
+[`dist`](dist) 目录。
 
 ## 发版流程
 
