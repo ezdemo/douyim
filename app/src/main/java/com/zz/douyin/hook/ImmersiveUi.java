@@ -75,6 +75,7 @@ final class ImmersiveUi {
     private static boolean swipeRunning;
     private static long swipeToken;
     private static boolean videoMissingLogged;
+    private static boolean liteNonFeedLogged;
     private static boolean activityResolveErrorLogged;
     private static long lastScanFailureAt;
     private static long transitionBoostUntil;
@@ -675,6 +676,12 @@ final class ImmersiveUi {
         if (activity != null
                 && DouyinHostPackages.isLite(activity.getPackageName())
                 && !isLiteForegroundFeed(activity, decor)) {
+            if (!liteNonFeedLogged) {
+                liteNonFeedLogged = true;
+                Log.i(DouyinModule.TAG,
+                        "Lite: foreground feed unavailable/profile visible; "
+                                + "restoring host UI and suspending feed actions");
+            }
             removeDownloadButton();
             PlaybackState.setContentAvailable(false);
             PlaybackState.setPhotoContent(false);
@@ -684,6 +691,10 @@ final class ImmersiveUi {
             restoreAll(activity, decor);
             scheduleNextScan();
             return;
+        }
+        if (liteNonFeedLogged) {
+            liteNonFeedLogged = false;
+            Log.i(DouyinModule.TAG, "Lite: foreground feed restored");
         }
 
         if (PlaybackState.consumePlaybackError()) {
