@@ -737,7 +737,6 @@ final class ImmersiveUi {
                     List<View> corePreservedViews = new ArrayList<>(preservedViews);
                     collectVisibleImmersiveComponents(
                             decor,
-                            decor,
                             rootRect,
                             corePreservedViews,
                             preservedViews
@@ -1431,7 +1430,6 @@ final class ImmersiveUi {
 
     private static void collectVisibleImmersiveComponents(
             View node,
-            View root,
             Rect rootRect,
             List<View> corePreservedViews,
             List<View> out
@@ -1462,7 +1460,6 @@ final class ImmersiveUi {
             for (int index = 0; index < group.getChildCount(); index++) {
                 collectVisibleImmersiveComponents(
                         group.getChildAt(index),
-                        root,
                         rootRect,
                         corePreservedViews,
                         out
