@@ -679,7 +679,7 @@ final class ImmersiveUi {
             if (!liteNonFeedLogged) {
                 liteNonFeedLogged = true;
                 Log.i(DouyinModule.TAG,
-                        "Lite: foreground feed unavailable/profile visible; "
+                        "Lite: profile screen identified; "
                                 + "restoring host UI and suspending feed actions");
             }
             removeDownloadButton();
@@ -810,10 +810,11 @@ final class ImmersiveUi {
     }
 
     /**
-     * A feed panel snapshot, not a renderer still playing in the background,
-     * is the minimum signal for immersive controls in Douyin Lite.
-     * Large visible profile containers veto this even if a cached feed panel
-     * is technically attached beneath the profile tab.
+     * The Lite feed may not expose the same BaseListFragmentPanel model as
+     * regular Douyin. Requiring FeedContentTracker.current() here disabled
+     * immersive mode for ALL Lite videos when the model lookup was absent.
+     * Only block a positively identified foreground profile screen; the
+     * existing centered video renderer checks decide whether to hide UI.
      */
     private static boolean isLiteForegroundFeed(Activity activity, View decor) {
         if (activity == null || decor == null) {
@@ -826,10 +827,9 @@ final class ImmersiveUi {
         if (LiteScreenPolicy.isProfileIdentifier(activityName)) {
             return false;
         }
-        boolean hasCurrentFeed = FeedContentTracker.current(decor) != null;
-        boolean profileVisible = hasCurrentFeed && hasVisibleProfilePage(decor);
+        boolean profileVisible = hasVisibleProfilePage(decor);
         return LiteScreenPolicy.shouldAllowFeedActions(
-                true, activityName, hasCurrentFeed, profileVisible
+                true, activityName, profileVisible
         );
     }
 

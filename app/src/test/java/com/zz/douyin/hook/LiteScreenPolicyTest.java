@@ -9,25 +9,29 @@ public final class LiteScreenPolicyTest {
     @Test
     public void standardDouyinRetainsExistingFeedBehavior() {
         assertTrue(LiteScreenPolicy.shouldAllowFeedActions(
-                false, "com.ss.android.ugc.aweme.main.MainActivity", false, false));
+                false, "com.ss.android.ugc.aweme.main.MainActivity", false));
+        assertTrue(LiteScreenPolicy.shouldAllowFeedActions(
+                false, "com.ss.android.ugc.aweme.profile.ui.UserProfileActivity", true));
     }
 
     @Test
-    public void liteRequiresLiveForegroundFeed() {
+    public void liteDoesNotRequireFeedModelToEnableImmersive() {
+        // Lite might keep the renderer working even when the regular feed
+        // panel class does not exist. Do not reintroduce the 1.7.8 bug.
         assertTrue(LiteScreenPolicy.shouldAllowFeedActions(
-                true, "com.ss.android.ugc.aweme.main.MainActivity", true, false));
-        assertFalse(LiteScreenPolicy.shouldAllowFeedActions(
-                true, "com.ss.android.ugc.aweme.main.MainActivity", false, false));
+                true, "com.ss.android.ugc.aweme.main.MainActivity", false));
+        assertTrue(LiteScreenPolicy.shouldAllowFeedActions(
+                true, "com.ss.android.ugc.aweme.main.MainActivity", false));
     }
 
     @Test
     public void liteNeverUsesProfileOrMineScreens() {
         assertFalse(LiteScreenPolicy.shouldAllowFeedActions(
-                true, "com.ss.android.ugc.aweme.profile.ui.UserProfileActivity", true, false));
+                true, "com.ss.android.ugc.aweme.profile.ui.UserProfileActivity", false));
         assertFalse(LiteScreenPolicy.shouldAllowFeedActions(
-                true, "com.ss.android.ugc.aweme.main.MainActivity", true, true));
+                true, "com.ss.android.ugc.aweme.main.MainActivity", true));
         assertFalse(LiteScreenPolicy.shouldAllowFeedActions(
-                true, "com.ss.android.ugc.aweme.mine.MineActivity", true, false));
+                true, "com.ss.android.ugc.aweme.mine.MineActivity", false));
     }
 
     @Test
