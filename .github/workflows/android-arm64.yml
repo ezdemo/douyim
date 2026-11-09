@@ -10,6 +10,15 @@ on:
       - "*.gradle.kts"
       - "gradle.properties"
       - ".github/workflows/android-arm64.yml"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/android-arm64.yml"
   workflow_dispatch:
 
 permissions:
@@ -103,16 +112,11 @@ jobs:
 
       - name: Add build summary
         if: success()
+        shell: bash
         run: |
           {
-            echo "## ARM64 APK build succeeded"
-            echo
-            echo "- APK: `douyim-arm64-v8a.apk`"
-            echo "- ABI: `arm64-v8a`"
-            echo "- Commit: `${GITHUB_SHA}`"
-            echo "- SHA-256:"
-            echo
-            echo "```"
+            printf '%s\\n' '## ARM64 APK build succeeded' ''
+            printf '%s\\n' '- APK: douyim-arm64-v8a.apk' '- ABI: arm64-v8a'
+            printf '%s\\n' "- Commit: ${GITHUB_SHA}" '- SHA-256:' ''
             cat dist/SHA256SUMS.txt
-            echo "```"
           } >> "$GITHUB_STEP_SUMMARY"
