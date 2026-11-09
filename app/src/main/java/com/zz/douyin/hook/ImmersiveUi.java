@@ -25,6 +25,7 @@ import android.widget.TextView;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -74,6 +75,7 @@ final class ImmersiveUi {
     private static boolean swipeRunning;
     private static long swipeToken;
     private static boolean videoMissingLogged;
+    private static boolean liteNonFeedLogged;
     private static boolean activityResolveErrorLogged;
     private static long lastScanFailureAt;
     private static long transitionBoostUntil;
@@ -163,7 +165,10 @@ final class ImmersiveUi {
         MAIN.postDelayed(() -> {
             Activity activity = activeActivity();
             View decor = activeDecor(activity);
-            if (decor == null) {
+            if (decor == null
+                    || (activity != null
+                    && DouyinHostPackages.isLite(activity.getPackageName())
+                    && !isLiteForegroundFeed(activity, decor))) {
                 return;
             }
             if (attempt > 0 && isCommentPanelVisible(decor)) {
@@ -664,6 +669,34 @@ final class ImmersiveUi {
             return;
         }
 
+        // Douyin Lite reuses MainActivity for feed and user-profile pages. An old
+        // player surface can remain attached behind the profile even though the
+        // foreground is no longer a feed. Never hide all profile controls based
+        // on that renderer or stale PlaybackState events.
+        if (activity != null
+                && DouyinHostPackages.isLite(activity.getPackageName())
+                && !isLiteForegroundFeed(activity, decor)) {
+            if (!liteNonFeedLogged) {
+                liteNonFeedLogged = true;
+                Log.i(DouyinModule.TAG,
+                        "Lite: foreground feed unavailable/profile visible; "
+                                + "restoring host UI and suspending feed actions");
+            }
+            removeDownloadButton();
+            PlaybackState.setContentAvailable(false);
+            PlaybackState.setPhotoContent(false);
+            resetFilterCandidate();
+            transitionBoostUntil = 0L;
+            touchInProgress = false;
+            restoreAll(activity, decor);
+            scheduleNextScan();
+            return;
+        }
+        if (liteNonFeedLogged) {
+            liteNonFeedLogged = false;
+            Log.i(DouyinModule.TAG, "Lite: foreground feed restored");
+        }
+
         if (PlaybackState.consumePlaybackError()) {
             onPlaybackCompleted("playback error");
             scheduleNextScan();
@@ -774,6 +807,75 @@ final class ImmersiveUi {
             }
         }
         scheduleNextScan();
+    }
+
+    /**
+     * A feed panel snapshot, not a renderer still playing in the background,
+     * is the minimum signal for immersive controls in Douyin Lite.
+     * Large visible profile containers veto this even if a cached feed panel
+     * is technically attached beneath the profile tab.
+     */
+    private static boolean isLiteForegroundFeed(Activity activity, View decor) {
+        if (activity == null || decor == null) {
+            return false;
+        }
+        if (!DouyinHostPackages.isLite(activity.getPackageName())) {
+            return true;
+        }
+        String activityName = activity.getClass().getName();
+        if (LiteScreenPolicy.isProfileIdentifier(activityName)) {
+            return false;
+        }
+        boolean hasCurrentFeed = FeedContentTracker.current(decor) != null;
+        boolean profileVisible = hasCurrentFeed && hasVisibleProfilePage(decor);
+        return LiteScreenPolicy.shouldAllowFeedActions(
+                true, activityName, hasCurrentFeed, profileVisible
+        );
+    }
+
+    private static boolean hasVisibleProfilePage(View decor) {
+        Rect screen = new Rect();
+        if (!decor.getGlobalVisibleRect(screen) || screen.isEmpty()) {
+            return false;
+        }
+        ArrayDeque<View> pending = new ArrayDeque<>();
+        pending.add(decor);
+        Rect candidateRect = new Rect();
+        int budget = 800;
+        while (!pending.isEmpty() && budget-- > 0) {
+            View candidate = pending.removeFirst();
+            if (candidate.getVisibility() != View.VISIBLE || !candidate.isShown()) {
+                continue;
+            }
+            if (candidate != decor) {
+                boolean profile = LiteScreenPolicy.isProfileIdentifier(
+                        candidate.getClass().getName()
+                );
+                if (!profile && candidate.getId() != View.NO_ID) {
+                    try {
+                        profile = LiteScreenPolicy.isProfileIdentifier(
+                                candidate.getResources().getResourceEntryName(
+                                        candidate.getId()
+                                )
+                        );
+                    } catch (RuntimeException ignored) {
+                        // Obfuscated host IDs may not have resource entry names.
+                    }
+                }
+                if (profile && candidate.getGlobalVisibleRect(candidateRect)
+                        && candidateRect.contains(screen.centerX(), screen.centerY())
+                        && candidateRect.width() >= screen.width() * 0.65f
+                        && candidateRect.height() >= screen.height() * 0.50f) {
+                    return true;
+                }
+            }
+            if (candidate instanceof ViewGroup group) {
+                for (int index = 0; index < group.getChildCount(); index++) {
+                    pending.add(group.getChildAt(index));
+                }
+            }
+        }
+        return false;
     }
 
     private static void scheduleNextScan() {
@@ -1818,6 +1920,12 @@ final class ImmersiveUi {
 
     private static boolean swipeToNext(View decor, String reason) {
         if (!moduleEnabled) return false;
+        Activity activity = activeActivity();
+        if (activity != null
+                && DouyinHostPackages.isLite(activity.getPackageName())
+                && !isLiteForegroundFeed(activity, decor)) {
+            return false;
+        }
         long now = SystemClock.uptimeMillis();
         if (swipeRunning
                 || !decor.isAttachedToWindow()

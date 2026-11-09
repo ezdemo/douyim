@@ -15,20 +15,20 @@ import io.github.libxposed.api.XposedModule;
 
 public final class DouyinModule extends XposedModule {
     static final String TAG = "DouyinImmersive";
-    static final String TARGET_PACKAGE = "com.ss.android.ugc.aweme";
     private static final Set<ClassLoader> INSTALLED_LOADERS =
             Collections.newSetFromMap(new WeakHashMap<>());
 
     @Override
     public void onModuleLoaded(ModuleLoadedParam param) {
-        log(Log.INFO, TAG, "module 1.7.5 loaded in " + param.getProcessName()
+        log(Log.INFO, TAG, "module 1.7.8 loaded in " + param.getProcessName()
                 + ", framework=" + getFrameworkName()
                 + ", api=" + getApiVersion());
     }
 
     @Override
     public void onPackageReady(PackageReadyParam param) {
-        if (!TARGET_PACKAGE.equals(param.getPackageName()) || !param.isFirstPackage()) {
+        if (!DouyinHostPackages.supports(param.getPackageName())
+                || !param.isFirstPackage()) {
             return;
         }
         synchronized (INSTALLED_LOADERS) {
@@ -37,6 +37,11 @@ public final class DouyinModule extends XposedModule {
                 return;
             }
         }
+
+        log(Log.INFO, TAG, "installing hooks for "
+                + param.getPackageName()
+                + (DouyinHostPackages.isLite(param.getPackageName())
+                        ? " (Lite: experimental class compatibility)" : ""));
 
         installSubsystem("activity lifecycle", this::hookActivityLifecycle);
         installSubsystem("activity touch", this::hookActivityTouch);

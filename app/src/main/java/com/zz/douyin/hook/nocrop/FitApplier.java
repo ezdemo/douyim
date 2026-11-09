@@ -22,6 +22,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import com.zz.douyin.hook.DouyinHostPackages;
+import com.zz.douyin.hook.LiteScreenPolicy;
+
 /**
  * 全屏内容适配器——"只处理全屏界面"的落地点。
  *
@@ -801,12 +804,24 @@ final class FitApplier {
      * 其余（搜索列表、广告、商城、未知 Activity、非 Activity 上下文）一律不碰。
      */
     private static boolean inAllowedScope(View video) {
-        if (cleanActive()) {
-            return true;
-        }
         Activity act = activityOf(video);
         if (act == null) {
             return false; // 非 Activity 上下文（悬浮窗/服务窗口）：保守不碰
+        }
+        if (DouyinHostPackages.isLite(act.getPackageName())) {
+            // Lite profile screens can share a MainActivity and retain feed
+            // renderers. Never mutate profile/layout thumbnail bounds.
+            if (LiteScreenPolicy.isProfileIdentifier(act.getClass().getName())) {
+                return false;
+            }
+            for (View cursor = video; cursor != null; cursor = parentOf(cursor)) {
+                if (LiteScreenPolicy.isProfileIdentifier(cursor.getClass().getName())) {
+                    return false;
+                }
+            }
+        }
+        if (cleanActive()) {
+            return true;
         }
         String n = act.getClass().getName().toLowerCase(Locale.ROOT);
         return n.contains("mainactivity") || n.contains("detailactivity");
