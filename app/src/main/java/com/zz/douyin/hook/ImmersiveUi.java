@@ -731,13 +731,19 @@ final class ImmersiveUi {
                             : ""));
                 }
             }
-            List<View> corePreservedViews = new ArrayList<>(preservedViews);
-            collectVisibleImmersiveComponents(
-                    decor,
-                    decor,
-                    corePreservedViews,
-                    preservedViews
-            );
+            if (hasVisibleComponentExceptions()) {
+                Rect rootRect = new Rect();
+                if (decor.getGlobalVisibleRect(rootRect) && !rootRect.isEmpty()) {
+                    List<View> corePreservedViews = new ArrayList<>(preservedViews);
+                    collectVisibleImmersiveComponents(
+                            decor,
+                            decor,
+                            rootRect,
+                            corePreservedViews,
+                            preservedViews
+                    );
+                }
+            }
             restorePreservedPaths(preservedViews);
             hideOutsidePreservedPaths(decor, preservedViews);
             updateGesturePaths(decor, videos);
@@ -1426,6 +1432,7 @@ final class ImmersiveUi {
     private static void collectVisibleImmersiveComponents(
             View node,
             View root,
+            Rect rootRect,
             List<View> corePreservedViews,
             List<View> out
     ) {
@@ -1442,7 +1449,7 @@ final class ImmersiveUi {
         // A parent that contains the video or danmaku renderer must remain transparent
         // to this classifier; inspect its children instead of preserving the whole layer.
         if (!containsAny(node, corePreservedViews)) {
-            int component = classifyImmersiveComponent(node, root);
+            int component = classifyImmersiveComponent(node, rootRect);
             if (shouldKeepComponentVisible(component)) {
                 if (!out.contains(node)) {
                     out.add(node);
@@ -1456,6 +1463,7 @@ final class ImmersiveUi {
                 collectVisibleImmersiveComponents(
                         group.getChildAt(index),
                         root,
+                        rootRect,
                         corePreservedViews,
                         out
                 );
@@ -1463,15 +1471,9 @@ final class ImmersiveUi {
         }
     }
 
-    private static int classifyImmersiveComponent(View view, View root) {
-        if (view == root) {
-            return ImmersiveComponentPolicy.NONE;
-        }
-        Rect rootRect = new Rect();
+    private static int classifyImmersiveComponent(View view, Rect rootRect) {
         Rect visibleRect = new Rect();
-        if (!root.getGlobalVisibleRect(rootRect)
-                || rootRect.isEmpty()
-                || !view.getGlobalVisibleRect(visibleRect)
+        if (!view.getGlobalVisibleRect(visibleRect)
                 || visibleRect.isEmpty()
                 || (view.getAlpha() <= 0.05f && !HIDDEN.containsKey(view))) {
             return ImmersiveComponentPolicy.NONE;
@@ -1516,6 +1518,14 @@ final class ImmersiveUi {
                 rootRect.width(),
                 rootRect.height()
         );
+    }
+
+    private static boolean hasVisibleComponentExceptions() {
+        return !hideTopNavigation
+                || !hideRightActions
+                || !hideBottomInfo
+                || !hideBottomNavigation
+                || !hidePlayerControls;
     }
 
     private static boolean shouldKeepComponentVisible(int component) {
