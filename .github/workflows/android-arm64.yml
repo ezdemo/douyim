@@ -48,7 +48,12 @@ jobs:
           set +o pipefail
           yes | "$SDKMANAGER" --licenses
           set -o pipefail
-          "$SDKMANAGER" "platforms;android-37"
+          # API 37 is published by sdkmanager as android-37.0.
+          "$SDKMANAGER" "platforms;android-37.0"
+          # AGP 9.2.1 resolves compileSdk = 37 through the android-37 directory.
+          if [ ! -e "$SDK_ROOT/platforms/android-37" ]; then
+            ln -s android-37.0 "$SDK_ROOT/platforms/android-37"
+          fi
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
