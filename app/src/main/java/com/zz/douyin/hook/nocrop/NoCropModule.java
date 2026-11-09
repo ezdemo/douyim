@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import com.zz.douyin.FilterPreferences;
+import com.zz.douyin.hook.DouyinHostPackages;
 
 import io.github.libxposed.api.XposedModule;
 
@@ -46,7 +47,6 @@ public final class NoCropModule extends XposedModule {
 
     static final String TAG = "DouYinNoCrop";
 
-    private static final String TARGET_PACKAGE = "com.ss.android.ugc.aweme";
     private static final String PARAMS_CLASS =
             "com.ss.android.ugc.aweme.feed.model.VideoItemParams";
     private static final String TEXTURE_VIEW_CLASS =
@@ -91,7 +91,8 @@ public final class NoCropModule extends XposedModule {
 
     @Override
     public void onPackageReady(PackageReadyParam param) {
-        if (!TARGET_PACKAGE.equals(param.getPackageName()) || !param.isFirstPackage()) {
+        if (!DouyinHostPackages.supports(param.getPackageName())
+                || !param.isFirstPackage()) {
             return;
         }
         synchronized (INSTALLED) {
@@ -110,6 +111,9 @@ public final class NoCropModule extends XposedModule {
                 log(Log.DEBUG, TAG, "preference listener unavailable: " + t);
             }
         }
+        log(Log.INFO, TAG, "initializing no-crop in " + param.getPackageName()
+                + (DouyinHostPackages.isLite(param.getPackageName())
+                        ? " (Lite: experimental)" : ""));
         FitApplier.init(param.getClassLoader());
         installVideoBindHook(param.getClassLoader());
         installTextureAttachHook(param.getClassLoader());
