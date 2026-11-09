@@ -56,6 +56,12 @@ final class ImmersiveUi {
     private static volatile boolean moduleEnabled = true;
     private static volatile boolean blockDoubleTap;
     private static volatile boolean immersiveEnabled = true;
+    private static volatile boolean hideTopNavigation = true;
+    private static volatile boolean hideRightActions = true;
+    private static volatile boolean hideBottomInfo = true;
+    private static volatile boolean hideBottomNavigation = true;
+    private static volatile boolean hidePlayerControls = true;
+    private static volatile boolean hideSystemBars = true;
     private static SharedPreferences immersivePreferences;
     private static final SharedPreferences.OnSharedPreferenceChangeListener
             PREFERENCE_LISTENER = (preferences, key) -> {
@@ -274,6 +280,14 @@ final class ImmersiveUi {
         blockDoubleTap = com.zz.douyin.FilterPreferences.readBlockDoubleTap(preferences);
         immersiveEnabled = com.zz.douyin.FilterPreferences.readImmersiveEnabled(preferences);
         showDanmaku = com.zz.douyin.FilterPreferences.readShowDanmaku(preferences);
+        com.zz.douyin.FilterPreferences.ImmersiveComponents components =
+                com.zz.douyin.FilterPreferences.readImmersiveComponents(preferences);
+        hideTopNavigation = components.hideTopNavigation;
+        hideRightActions = components.hideRightActions;
+        hideBottomInfo = components.hideBottomInfo;
+        hideBottomNavigation = components.hideBottomNavigation;
+        hidePlayerControls = components.hidePlayerControls;
+        hideSystemBars = components.hideSystemBars;
         openCommentsOnDoubleTap =
                 com.zz.douyin.FilterPreferences.readDoubleTapComments(preferences);
         MAIN.post(() -> {
@@ -717,10 +731,21 @@ final class ImmersiveUi {
                             : ""));
                 }
             }
+            List<View> corePreservedViews = new ArrayList<>(preservedViews);
+            collectVisibleImmersiveComponents(
+                    decor,
+                    decor,
+                    corePreservedViews,
+                    preservedViews
+            );
             restorePreservedPaths(preservedViews);
             hideOutsidePreservedPaths(decor, preservedViews);
             updateGesturePaths(decor, videos);
-            hideSystemBars(activity, decor);
+            if (hideSystemBars) {
+                hideSystemBars(activity, decor);
+            } else {
+                restoreSystemBars(decor);
+            }
         } else {
             long now = SystemClock.uptimeMillis();
             if (ImmersiveTransitionPolicy.shouldHoldHiddenUi(
@@ -729,7 +754,11 @@ final class ImmersiveUi {
                     transitionBoostUntil
             )) {
                 reassertHiddenViews();
-                hideSystemBars(activity, decor);
+                if (hideSystemBars) {
+                    hideSystemBars(activity, decor);
+                } else {
+                    restoreSystemBars(decor);
+                }
             } else {
                 restoreAll(activity, decor);
             }
@@ -1394,6 +1423,112 @@ final class ImmersiveUi {
         }
     }
 
+    private static void collectVisibleImmersiveComponents(
+            View node,
+            View root,
+            List<View> corePreservedViews,
+            List<View> out
+    ) {
+        if (node == null
+                || !node.isAttachedToWindow()
+                || node.getVisibility() != View.VISIBLE
+                || !node.isShown()) {
+            return;
+        }
+        if (corePreservedViews.contains(node)) {
+            return;
+        }
+
+        // A parent that contains the video or danmaku renderer must remain transparent
+        // to this classifier; inspect its children instead of preserving the whole layer.
+        if (!containsAny(node, corePreservedViews)) {
+            int component = classifyImmersiveComponent(node, root);
+            if (shouldKeepComponentVisible(component)) {
+                if (!out.contains(node)) {
+                    out.add(node);
+                }
+                return;
+            }
+        }
+
+        if (node instanceof ViewGroup group) {
+            for (int index = 0; index < group.getChildCount(); index++) {
+                collectVisibleImmersiveComponents(
+                        group.getChildAt(index),
+                        root,
+                        corePreservedViews,
+                        out
+                );
+            }
+        }
+    }
+
+    private static int classifyImmersiveComponent(View view, View root) {
+        if (view == root) {
+            return ImmersiveComponentPolicy.NONE;
+        }
+        Rect rootRect = new Rect();
+        Rect visibleRect = new Rect();
+        if (!root.getGlobalVisibleRect(rootRect)
+                || rootRect.isEmpty()
+                || !view.getGlobalVisibleRect(visibleRect)
+                || visibleRect.isEmpty()
+                || (view.getAlpha() <= 0.05f && !HIDDEN.containsKey(view))) {
+            return ImmersiveComponentPolicy.NONE;
+        }
+
+        String resourceName = "";
+        if (view.getId() != View.NO_ID) {
+            try {
+                resourceName = view.getResources().getResourceEntryName(view.getId());
+            } catch (RuntimeException ignored) {
+                // Host resource IDs are obfuscated and may not exist in this process.
+            }
+        }
+        StringBuilder label = new StringBuilder();
+        CharSequence description = view.getContentDescription();
+        if (description != null) {
+            label.append(description);
+        }
+        boolean textLike = view instanceof TextView;
+        if (view instanceof TextView textView && textView.getText() != null) {
+            if (label.length() > 0) {
+                label.append(' ');
+            }
+            label.append(textView.getText());
+        }
+        boolean imageLike = view instanceof ImageView;
+        boolean clickable = view.isClickable() || view.hasOnClickListeners();
+        boolean container = view instanceof ViewGroup group && group.getChildCount() > 0;
+
+        return ImmersiveComponentPolicy.classify(
+                view.getClass().getName(),
+                resourceName,
+                label.toString(),
+                clickable,
+                textLike,
+                imageLike,
+                container,
+                visibleRect.left - rootRect.left,
+                visibleRect.top - rootRect.top,
+                visibleRect.right - rootRect.left,
+                visibleRect.bottom - rootRect.top,
+                rootRect.width(),
+                rootRect.height()
+        );
+    }
+
+    private static boolean shouldKeepComponentVisible(int component) {
+        return switch (component) {
+            case ImmersiveComponentPolicy.TOP_NAVIGATION -> !hideTopNavigation;
+            case ImmersiveComponentPolicy.RIGHT_ACTIONS -> !hideRightActions;
+            case ImmersiveComponentPolicy.BOTTOM_INFO -> !hideBottomInfo;
+            case ImmersiveComponentPolicy.BOTTOM_NAVIGATION -> !hideBottomNavigation;
+            case ImmersiveComponentPolicy.PLAYER_CONTROLS -> !hidePlayerControls;
+            default -> false;
+        };
+    }
+
     private static boolean overlapsAnyVideo(View candidate, List<View> videos) {
         Rect candidateRect = new Rect();
         if (!candidate.getGlobalVisibleRect(candidateRect) || candidateRect.isEmpty()) {
@@ -1631,13 +1766,7 @@ final class ImmersiveUi {
             Log.d(DouyinModule.TAG,
                     "restored hidden views=" + restored + " samples=" + samples);
         }
-        if (decor != null) {
-            Integer systemUi = ROOT_SYSTEM_UI.remove(decor);
-            if (systemUi != null) {
-                decor.setSystemUiVisibility(systemUi);
-            }
-        }
-        restoreSystemBars(activity);
+        restoreSystemBars(decor);
     }
 
     private static void restoreExpandedViewports() {
@@ -1670,8 +1799,14 @@ final class ImmersiveUi {
         );
     }
 
-    private static void restoreSystemBars(Activity activity) {
-        // Window flags are deliberately left untouched; see hideSystemBars.
+    private static void restoreSystemBars(View decor) {
+        if (decor == null) {
+            return;
+        }
+        Integer systemUi = ROOT_SYSTEM_UI.remove(decor);
+        if (systemUi != null) {
+            decor.setSystemUiVisibility(systemUi);
+        }
     }
 
     private static boolean swipeToNext(View decor, String reason) {
