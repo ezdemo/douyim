@@ -5,9 +5,10 @@ import java.util.Locale;
 /**
  * Conservative scope policy for Douyin Lite.
  *
- * Unlike the standard client's feed, Lite may keep a previous player surface
- * attached while the user navigates to a profile page within MainActivity.
- * A render surface alone is therefore not evidence of a foreground feed.
+ * Lite may keep a previous player surface attached while the user navigates
+ * to a profile page within MainActivity. Only recognized profile screens veto
+ * immersive actions: Lite's feed model classes may differ from regular Douyin,
+ * so a missing FeedContentTracker.current() is not grounds for suppressing UI.
  */
 public final class LiteScreenPolicy {
     private LiteScreenPolicy() {
@@ -16,11 +17,9 @@ public final class LiteScreenPolicy {
     public static boolean shouldAllowFeedActions(
             boolean liteHost,
             String activityClass,
-            boolean hasCurrentFeed,
             boolean visibleProfilePage
     ) {
-        return !liteHost || (hasCurrentFeed
-                && !visibleProfilePage
+        return !liteHost || (!visibleProfilePage
                 && !isProfileIdentifier(activityClass));
     }
 
