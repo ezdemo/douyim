@@ -14,6 +14,7 @@ public final class FilterPreferences {
     public static final String KEY_MODULE_ENABLED = "module_enabled";
     public static final String KEY_BLOCK_DOUBLE_TAP = "block_double_tap";
     public static final String KEY_IMMERSIVE_ENABLED = "immersive_enabled";
+    public static final String KEY_NO_CROP = "no_crop";
     public static final String KEY_SKIP_ADS = "skip_ads";
     public static final String KEY_SKIP_IMAGES = "skip_images";
     public static final String KEY_SKIP_LIVES = "skip_lives";
@@ -46,6 +47,7 @@ public final class FilterPreferences {
     public static final boolean DEFAULT_SKIP_LIVES = true;
     public static final boolean DEFAULT_SKIP_VIDEOS = false;
     public static final boolean DEFAULT_SHOW_DANMAKU = false;
+    public static final boolean DEFAULT_NO_CROP = false;
     public static final boolean DEFAULT_DOUBLE_TAP_COMMENTS = false;
 
     private FilterPreferences() {
@@ -57,6 +59,11 @@ public final class FilterPreferences {
 
     public static boolean readBlockDoubleTap(SharedPreferences preferences) {
         return preferences != null && preferences.getBoolean(KEY_BLOCK_DOUBLE_TAP, false);
+    }
+
+    public static boolean readNoCropEnabled(SharedPreferences preferences) {
+        return preferences != null
+                && preferences.getBoolean(KEY_NO_CROP, DEFAULT_NO_CROP);
     }
 
     public static boolean readImmersiveEnabled(SharedPreferences preferences) {
