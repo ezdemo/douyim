@@ -1,5 +1,11 @@
 package com.zz.douyin.hook.nocrop;
 
+/*
+ * Adapted from https://github.com/dunxuan/io.github.dunxuan.douyinnocrop
+ * Copyright (c) 2026 dunxuan. Licensed under the MIT License.
+ * See app/src/main/assets/licenses/douyin-no-crop-MIT.txt.
+ */
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
